@@ -1,17 +1,4 @@
 #!/usr/bin/env python
-# Copyright 2015 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """This script uses the Twitter Streaming API, via the tweepy library,
 to pull in tweets and publish them to a PubSub topic.
@@ -23,6 +10,10 @@ import os
 from tweepy import OAuthHandler
 from tweepy import Stream
 from tweepy.streaming import StreamListener
+import json 
+import datetime
+import hashlib
+from dateutil.parser import parse
 
 import utils
 
@@ -37,12 +28,35 @@ PUBSUB_TOPIC = os.environ['PUBSUB_TOPIC']
 NUM_RETRIES = 3
 
 
+
+
 def publish(client, pubsub_topic, data_lines):
-    """Publish to the given pubsub topic."""
     messages = []
+    """Publish to the given pubsub topic."""
     for line in data_lines:
-        pub = base64.urlsafe_b64encode(line)
-        messages.append({'data': pub})
+        data = json.loads(line)
+        try:
+            #HASH TWITTER HANDLE
+            user = data["user"]
+            hash_obj = hashlib.sha1(user["screen_name"].encode('utf-8'))
+            pbHash = hash_obj.hexdigest()
+            hashed_handle = "@[{}]".format(pbHash)
+            
+            #GET DATE IN EXPECTED FORMAT
+            date=str(parse(data["created_at"]))
+            datetime=date.split('+', 1)[0]
+
+            clean_data=json.dumps({
+                "tweet": data["text"],
+                "user_handle_hashed": hashed_handle,
+                "posted_at": datetime
+            }).encode("utf-8")
+            pub = base64.urlsafe_b64encode(clean_data)
+            messages.append({'data': pub})
+     
+        except Exception as e:
+            print(e)
+            raise
     body = {'messages': messages}
     resp = client.projects().topics().publish(
             topic=pubsub_topic, body=body).execute(num_retries=NUM_RETRIES)
@@ -57,7 +71,7 @@ class StdOutListener(StreamListener):
     count = 0
     twstring = ''
     tweets = []
-    batch_size = 3
+    batch_size = 5
     total_tweets = 10000000
     client = utils.create_pubsub_client(utils.get_credentials())
 

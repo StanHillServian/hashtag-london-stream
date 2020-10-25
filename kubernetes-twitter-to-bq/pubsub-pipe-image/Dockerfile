@@ -7,7 +7,6 @@ RUN pip install python-dateutil
 RUN pip install --upgrade oauth2client
 
 ADD twitter-to-pubsub.py /twitter-to-pubsub.py
-ADD pubsub-to-bigquery.py /pubsub-to-bq.py
 ADD controller.py /controller.py
 ADD utils.py /utils.py
 
