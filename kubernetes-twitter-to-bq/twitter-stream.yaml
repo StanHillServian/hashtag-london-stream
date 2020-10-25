@@ -16,15 +16,14 @@ spec:
     spec:
       containers:
       - name: twitter-to-pubsub
-        image: gcr.io/google-samples/pubsub-bq-pipe:v5
+        image: gcr.io/servian-task/pubsub-bq-pipe:v22
         env:
+        - name: GCP_PROJECT
+          value: servian-task
         - name: PROCESSINGSCRIPT
-          value: twitter-to-pubsub
-        # Change this to your pubsub topic
+          value: twitter-to-pubsub     
         - name: PUBSUB_TOPIC
-          value: projects/your-project/topics/your-topic
-        # Change the following four settings to your twitter credentials
-        # information.
+          value: projects/servian-task/topics/hashtag-london-topic
         - name: CONSUMERKEY
           value: lbRF9YBBJvAaDPrT1PbyjIVKD
         - name: CONSUMERSECRET
