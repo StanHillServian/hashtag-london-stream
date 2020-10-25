@@ -2,4 +2,4 @@
 export GOOGLE_CLOUD_PROJECT="servian-task"
 
 sudo pip3 install -r requirements.txt
-python3 pubsub-to-bigquery.py
+python3 pubsub-to-bq.py
